@@ -29,6 +29,7 @@ import (
 	"go.opentelemetry.io/collector/confmap/provider/httpsprovider"
 	"go.opentelemetry.io/collector/confmap/provider/yamlprovider"
 	"go.opentelemetry.io/collector/otelcol"
+	"go.opentelemetry.io/collector/service/telemetry/otelconftelemetry"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -71,6 +72,12 @@ func getConfig(logger *zap.Logger) string {
 
 func NewCollector(logger *zap.Logger, factories otelcol.Factories, version string) *Collector {
 	l := logger.Named("NewCollector")
+
+	// Ensure the Telemetry factory is set (required since otelcol v0.143.0)
+	if factories.Telemetry == nil {
+		factories.Telemetry = otelconftelemetry.NewFactory()
+	}
+
 	cfgSet := otelcol.ConfigProviderSettings{
 		ResolverSettings: confmap.ResolverSettings{
 			URIs:              []string{getConfig(l)},
